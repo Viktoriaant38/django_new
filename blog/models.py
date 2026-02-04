@@ -10,6 +10,9 @@ class Post(models.Model):
     def likes_count(self):
         return PostLike.objects.filter(post=self).count()
 
+    def users_liked(self):
+        return PostLike.objects.filter(post=self).values_list('author_id', flat=True)
+
 class Comment(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     author = models.ForeignKey(user_model, on_delete=models.CASCADE)

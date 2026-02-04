@@ -1,65 +1,55 @@
 {% extends 'parts/base_main.html' %}
 
-{% block title %}
-All posts
-{% endblock %}
-
+{% block title %}All posts{% endblock %}
 
 {% block content %}
 <div class="header">
-    {% if user.is_authenticated %}
-        <h3>Hello, {{ user.username }}</h3>
+    <div class="header-brand">
+        <h3>{% if user.is_authenticated %}Hello, {{ user.username }}{% else %}Welcome{% endif %}</h3>
+    </div>
+    <div class="header-links">
         <a href="/">Main</a>
-        <div class="header-links">
+        {% if user.is_authenticated %}
             <a href="/user/create-post">Create Post</a>
             <a href="/logout/">Logout</a>
-        </div>
-    {% else %}
-        <h3>Welcome</h3>
-        <a href="/">Main</a>
-        <div class="header-links">
+        {% else %}
             <a href="/login/">Login</a>
-        </div>
-    {% endif %}
+        {% endif %}
+    </div>
 </div>
 
-{% if post %}
-    <div class="post">
-        <div class="post-author"><a href="/user/{{post.author.pk}}">{{ post.author.username }}</a></div>
-        <div class="post-text">{{ post.text }}</div>
-        <div class="post-date">{{ post.created_at }}</div>
-        <!-- Блок с лайками -->
-        <div class="post-likes">
-            <form method="post" action="/post/{{post.pk}}/like/" style="display: inline;">
+{% for post in posts %}
+    <div class="card post-card">
+        <div class="post-header">
+            <a href="/user/{{post.author.pk}}" class="post-author">@{{ post.author.username }}</a>
+            <span class="post-date">{{ post.created_at|date:"d M Y" }}</span>
+        </div>
+
+        <div class="post-text">
+            {{ post.text }}
+        </div>
+
+        <div class="post-actions">
+            <form method="post" action="/post/{{post.pk}}/like/">
                 {% csrf_token %}
-                <button type="submit" class="btn-like">
-                    {% if user_liked %}
-                        ❤️ Unlike
-                    {% else %}
-                        🤍 Like
-                    {% endif %}
+                <button type="submit" class="btn-like {% if user_liked %}active{% endif %}">
+                    {% if request.user.pk in post.users_liked %}❤️{% else %}🤍{% endif %}
+                    <span class="likes-count">{{ post.likes_count }}</span>
                 </button>
             </form>
-            <span class="likes-count">{{ post.likes_count }} {% if post.likes_count == 1 %}like{% else %}likes{% endif %}</span>
+        </div>
+
+        <hr class="divider">
+
+        <div class="comments-section">
+            {% for comment in post.comments.all %} <div class="comment">
+                    <span class="comment-author">{{ comment.author.username }}</span>
+                    <span class="comment-text">{{ comment.text }}</span>
+                </div>
+            {% empty %}
+                <p class="text-muted">No comments yet.</p>
+            {% endfor %}
         </div>
     </div>
-    <div class="post">
-        <form method="post" action="/post/{{post.pk}}/comment/">
-            {% csrf_token %}
-            <input type="text" class="comment" name="text" placeholder="Write your comment here...">
-            <button type="submit" class="btn">Comment</button>
-        </form>
-        {% for comment in comments %}
-        <div class="comment">
-            <div class="comment-author"><a href="/user/{{comment.author.pk}}">{{ post.author.username }}</a></div>
-            <div class="comment-text">{{ comment.text }}</div>
-            <div class="comment-date">{{ comment.created_at }}</div>
-        </div>
-        {% endfor %}
-    </div>
-{% else %}
-    <div class="empty">
-        Post not found.
-    </div>
-{% endif %}
+{% endfor %}
 {% endblock %}

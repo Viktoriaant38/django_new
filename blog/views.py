@@ -7,13 +7,13 @@ user = get_user_model()
 
 def main(request):
     context = {
-        "posts": Post.objects.all().order_by("-px"),
+        "posts": Post.objects.all().order_by("-pk"),
     }
     return render(request, 'main.html', context)
 
 def user_posts(request, userid):
     context = {
-        "posts": Post.objects.filter(author_id=userid).order_by("-px"),
+        "posts": Post.objects.filter(author_id=userid).order_by("-pk"),
         "username": user.objects.get(id=userid).username
     }
     return render(request, 'main.html', context)
@@ -23,7 +23,7 @@ def view_post(request, postid):
     post = Post.first() if posts else None
     context = {
         "post": post,
-        "comments": Comment.objects.filter(post=post).order_by("-px"),
+        "comments": Comment.objects.filter(post=post).order_by("-pk"),
         "user_likes": PostLike.objects.filter(post=post, author = request.user).exists(),
     }
     return render(request, 'post.html', context)
