@@ -1,0 +1,83 @@
+{% extends 'parts/base_main.html' %}
+
+{% block title %}
+
+{% if post %}
+Post by {{ post.author.username }}
+{% else %}
+Post not found
+{% endif %}
+
+{% endblock %}
+
+{% block content %}
+<div class="header">
+    {% if user.is_authenticated %}
+        <h3>Hello, {{ user.username }}</h3>
+        <a href="/">Main</a>
+        <div class="header-links">
+            <a href="/user/create-post">Create Post</a>
+            <a href="/logout/">Logout</a>
+        </div>
+    {% else %}
+        <h3>Welcome</h3>
+        <a href="/">Main</a>
+        <div class="header-links">
+            <a href="/login/">Login</a>
+        </div>
+    {% endif %}
+</div>
+
+{% if post %}
+    <div class="post">
+        <div class="post-author"><a href="posts/user/{{ post.author.id}}">{{ post.author.username }}</a></div>
+        <div class="post-text">{{ post.text }}</div>
+        <div class="post-meta"><span class="post-date">{{ post.created_at }}</span></div>
+        <!-- Блок с лайками -->
+        <div class="post-likes">
+            <form method="post" action="posts/post/{{post.pk}}/like/" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-like">
+                    {% if user_liked %}
+                        ❤️ Unlike
+                    {% else %}
+                        🤍 Like
+                    {% endif %}
+                </button>
+            </form>
+            <span class="likes-count">{{ post.likes_count }} {% if post.likes_count == 1 %}like{% else %}likes{% endif %}</span>
+        </div>
+    </div>
+    <div class="post">
+        <form method="post" action="/post/{{post.pk}}/comment/">
+            {% csrf_token %}
+            <input type="text" class="comment" name="text" placeholder="Write your comment here...">
+            <button type="submit" class="btn">Comment</button>
+        </form>
+        {% for comment in comments %}
+        <div class="comment">
+            <div class="comment-author"><a href="/user/{{comment.author.pk}}">{{ post.author.username }}</a></div>
+            <div class="comment-text">{{ comment.text }}</div>
+            <div class="comment-date">{{ comment.created_at }}</div>
+            <div class="post-likes">
+                <form method="post" action="/comment/{{comment.pk}}/like/" style="...">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-like">
+                        {% if request.user.id in comment.user_liked %}
+                            ❤️ Unlike
+                        {% else %}
+                            🤍 Like
+                    {% endif %}
+                    </button>
+                </form>
+                <span class="likes-count">{{ comment.likes_count }} {% if comment.likes_count == 1 %}like{% else %}likes{% endif %}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty">
+        Post not found.
+    </div>
+{% endif %}
+{% endblock %}
