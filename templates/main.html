@@ -1,107 +1,65 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>All posts</title>
-    <style>
-        body {
-            font-family: "Segoe UI", Arial, sans-serif;
-            background-color: #f4f6f9;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
+{% extends 'parts/base_main.html' %}
 
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-        }
+{% block title %}
+All posts
+{% endblock %}
 
-        .auth-box {
-            background: #fff;
-            border: 3px solid #007bff;
-            border-radius: 8px;
-            padding: 15px 20px;
-            margin-bottom: 30px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        }
 
-        .auth-box h3 {
-            margin: 0 0 10px;
-            color: #007bff;
-        }
-
-        .auth-box a {
-            text-decoration: none;
-            color: #fff;
-            background: #007bff;
-            padding: 8px 15px;
-            border-radius: 5px;
-            transition: background 0.2s ease;
-        }
-
-        .auth-box a:hover {
-            background: #0056b3;
-        }
-
-        .post-card {
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .post-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-        }
-
-        .post-card h1 {
-            font-size: 1.4rem;
-            margin-bottom: 10px;
-            color: #007bff;
-        }
-
-        .post-card p {
-            margin: 5px 0;
-            line-height: 1.5;
-        }
-
-        .date {
-            font-size: 0.9rem;
-            color: #666;
-            font-style: italic;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="auth-box">
-            {% if user.is_authenticated %}
-                <h3>Hello {{ user.username }}</h3>
-                <a href="/user/create-post">Create Post</a>
-                <a href="/logout/">Logout</a>
-            {% else %}
-                <a href="/login/">Login</a>
-            {% endif %}
+{% block content %}
+<div class="header">
+    {% if user.is_authenticated %}
+        <h3>Hello, {{ user.username }}</h3>
+        <a href="/">Main</a>
+        <div class="header-links">
+            <a href="/user/create-post">Create Post</a>
+            <a href="/logout/">Logout</a>
         </div>
-
-        {% for post in posts %}
-        <div class="post-card">
-            <h1>{{ post.author.username }}</h1>
-            <p>{{ post.text }}</p>
-            <p class="date">{{ post.created_at }}</p>
+    {% else %}
+        <h3>Welcome</h3>
+        <a href="/">Main</a>
+        <div class="header-links">
+            <a href="/login/">Login</a>
         </div>
-        {% empty %}
-        <p style="text-align:center; color:#888; font-style:italic;">Постов пока нет.</p>
+    {% endif %}
+</div>
+
+{% if post %}
+    <div class="post">
+        <div class="post-author"><a href="/user/{{post.author.pk}}">{{ post.author.username }}</a></div>
+        <div class="post-text">{{ post.text }}</div>
+        <div class="post-date">{{ post.created_at }}</div>
+        <!-- Блок с лайками -->
+        <div class="post-likes">
+            <form method="post" action="/post/{{post.pk}}/like/" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-like">
+                    {% if user_liked %}
+                        ❤️ Unlike
+                    {% else %}
+                        🤍 Like
+                    {% endif %}
+                </button>
+            </form>
+            <span class="likes-count">{{ post.likes_count }} {% if post.likes_count == 1 %}like{% else %}likes{% endif %}</span>
+        </div>
+    </div>
+    <div class="post">
+        <form method="post" action="/post/{{post.pk}}/comment/">
+            {% csrf_token %}
+            <input type="text" class="comment" name="text" placeholder="Write your comment here...">
+            <button type="submit" class="btn">Comment</button>
+        </form>
+        {% for comment in comments %}
+        <div class="comment">
+            <div class="comment-author"><a href="/user/{{comment.author.pk}}">{{ post.author.username }}</a></div>
+            <div class="comment-text">{{ comment.text }}</div>
+            <div class="comment-date">{{ comment.created_at }}</div>
+        </div>
         {% endfor %}
     </div>
-</body>
-</html>
-
+{% else %}
+    <div class="empty">
+        Post not found.
+    </div>
+{% endif %}
+{% endblock %}
